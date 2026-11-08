@@ -1,5 +1,6 @@
 #  -----------------------------Library Management System --------------------------------------
 import uuid
+import json
 
 # --------------------------------------- Book Class --------------------------------------------------------
 
@@ -32,7 +33,7 @@ class Book:
 
         
     def display_details(self):
-        return f"========== Book Details ======== \n Book ID : {self.book_id} \n Title : {self.title} \n Author : {self.author} \n Available : {self.__is_available}"
+        return f"========== Book Details ======== \n BookID : {self.book_id} \n Title : {self.title} \n Author : {self.author} \n Available : {self.__is_available}"
 
 
 
@@ -65,13 +66,15 @@ class Library:
         self.books = []
         self.members = []
 
-    # Displaying Books
+   # Displaying Books
     def display_books(self):
-        all_books = []
-        for book in self.books:
-            all_books.append(book.display_details())     
+        if not self.books:
+            print("No books available in the library.")
+            return
 
-        return all_books
+        for book in self.books:
+            print(book.display_details())
+           
 
     # Adding a Book
     def add_book(self,book):
@@ -140,12 +143,7 @@ class Library:
     
     # Borrowing a book Functionality
     def borrow_book(self,member,book):
-        # Exception Handling
-        if not isinstance(member,Member):
-            raise TypeError("Member must be a String")
-        if not isinstance(book, Book):
-            raise TypeError("Book must be an object")
-
+        
 
         if not member in self.members:
             return "Sorry You are not registered in the library"
@@ -164,12 +162,7 @@ class Library:
     # Returning a book
 
     def return_book(self,member,book):
-         # Exception Handling
-        if not isinstance(member,Member):
-            raise TypeError("Member must be a String")
-        if not isinstance(book, Book):
-            raise TypeError("Book must be an object")
-        
+         
 
 
         
@@ -181,59 +174,122 @@ class Library:
             return f"{member.name} returned the book Successfully"
 
 
-# --------------------------------------- Displaying records --------------------------------------------------------
 
 
-# Creating Books
-try:
-    book1 = Book("Python Basics", "John Smith")
-    book2 = Book( "The Pragmatic Programmer", "Andy Hunt")
-    book3 = Book( "Atomic Habits", "James")
-    book4 = Book( "Rich Dad Poor Dad", "John")
-except TypeError as error:
-    print(error)
 
+# ----------------- Menu interface ---------------------
 
-# Creating Members
-try:
-    member1 = StudentMember('Afzan')
-    member2 = RegularMember('Zaid')
-except TypeError as error:
-    print(error)
-# Creating Object Libraries
+def display():
+    print("============================Please Enter your choice===========================================")
+    print("Add a Book : 1")
+    print("Remove a Book : 2")
+    print("Search a Book : 3")
+    print("Display all Books : 4")
+    print("Borrow a Book : 5")
+    print("Return a Book : 6")
+    print("Register a member : 7")
+    print("Search Member : 8")
+    print("Exit : 9")
+    print("=============================================================================================")
 
-try:
+library = Library()
 
-    library = Library()
+while True:
 
-# Adding Book to library
-    print(library.add_book(book1))
-    print(library.add_book(book2))
-    print(library.add_book(book3))
-    print(library.add_book(book4))
+    display()
+    inp = input("Enter a Choice : ")
 
-# Registering a member into the library
-    print(library.register_member(member1))
+    if inp == "1":
+        title = input("Enter Book Title : ")
+        author = input("Enter Book Author : ")
+        try:
+            book = Book(title,author)   
+            print(library.add_book(book))
 
-# Displaying the details of Added Book
-    print(library.display_books())
+            for books in library.display_books:
+                books_data = {
+                    "book_id" : books.BookID,
+                    "title": books.Title,
+                    "author":books.Author,
+                    "is_available":books.Available
+                }
 
+           
+            
+        except TypeError as error:
+            print(error)
 
-# Searching a book
-    print(library.search_book("python Basics").display_details())
+    elif inp == "2":
+        title = input("Enter Book Title : ")
 
-# Searching a member
-    print(library.search_member("afzan").display_details())
+        try:
+            print(library.remove_book(title))
+            
+        except TypeError as error:
+            print(error)
 
+    elif inp == "3":
+        title = input("Enter Book Title : ")
+        try:
+            print(library.search_book(title))
+        except TypeError as error:
+            print(error)
 
-# Borrowing Book
-    print(library.borrow_book(member1,book1))
-    print(library.borrow_book(member1,book2))
-    print(library.borrow_book(member1,book3))
+    elif inp == "4":
+        try:
+            print(library.display_books())
+            
+        except TypeError as error:
+            print(error)
 
+    elif inp == "5":
+            member_name = input("Enter Member Name : ")
+            book_title = input("Enter Book Title : ")
+            try:
+                member = library.search_member(member_name)
+                book = library.search_book(book_title)     
+                print(library.borrow_book(member, book))
+                
+            except TypeError as error:
+                print(error)
+    
+    elif inp == "6":
+            member = input("Enter Member Name : ")
+            title = input("Enter Book Title : ")
+            try:
+                print(library.return_book(member, title))
+                
+            except TypeError as error:
+                print(error)
+    
+    elif inp == "7":
+            Name = input("Enter Your Name : ")
+            print("Choose Membership type : \n 1.Student Membership \n 2.Regular Membership")
+            membership_type = input(" Choose Membership : ")
 
-# Returning a book
-    print(library.return_book(member2,book1))
-except TypeError as error:
-    print(error)
+            if membership_type == "1":
+                selected_member = StudentMember(Name)
+            elif membership_type == "2":
+                selected_member = RegularMember(Name)
+            else :
+                print("Invalid selection")
+            try:
+               
+                print(library.register_member(selected_member))
+                
+            except TypeError as error:
+                print(error)
 
+    elif inp == "8":
+            
+            Name = input("Enter Your Name : ")        
+            try:
+                print(library.search_member(Name))
+                
+            except TypeError as error:  
+                print(error)
+    elif inp == "9":
+        break
+
+    else:
+        print("Wrong Selection !")
