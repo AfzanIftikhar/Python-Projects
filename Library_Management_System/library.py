@@ -5,7 +5,7 @@ import json
 # --------------------------------------- Book Class --------------------------------------------------------
 
 class Book:
-    def __init__(self,title,author):
+    def __init__(self,title,author,book_id=None,is_available= True):
         
         if not isinstance(title,str):
             raise TypeError("Title must be a string")
@@ -128,8 +128,6 @@ class Library:
         else:
             return "No match Found !" 
 
-    
-  
     # Searching a member
     def search_member(self,name):
         if not isinstance(name,str):
@@ -160,7 +158,6 @@ class Library:
             return f"{member.name} borrowed the book successfully"
 
     # Returning a book
-
     def return_book(self,member,book):
          
 
@@ -173,6 +170,21 @@ class Library:
             book.is_available = True
             return f"{member.name} returned the book Successfully"
 
+    def save_books(self):
+        all_books = []
+
+        for book in self.books:
+            book_data = {
+                "Book ID ": book.book_id,
+                "title":book.title,
+                "author" : book.author,
+                "is_available":book.is_available
+            }
+
+            all_books.append(book_data)
+
+        with open("library.json", "w") as file:
+            json.dump(all_books,file,indent=4)
 
 
 
@@ -205,15 +217,7 @@ while True:
         try:
             book = Book(title,author)   
             print(library.add_book(book))
-
-            for books in library.display_books:
-                books_data = {
-                    "book_id" : books.BookID,
-                    "title": books.Title,
-                    "author":books.Author,
-                    "is_available":books.Available
-                }
-
+            library.save_books()
            
             
         except TypeError as error:
