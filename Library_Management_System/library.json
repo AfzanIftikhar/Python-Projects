@@ -1,7 +1,13 @@
 [
     {
-        "Book ID ": "eedad0e4-422f-45e2-b2e7-d5eaf4ceb56d",
-        "title": "rich dad poor dad",
+        "book_id": "a0f306bb-7a51-4c75-ab13-be4eb237a1ef",
+        "title": "atomic habits",
+        "author": "john",
+        "is_available": true
+    },
+    {
+        "book_id": "ef5669de-d6e2-4586-b1bc-5d238654e75b",
+        "title": "the kite runner",
         "author": "huang",
         "is_available": true
     }

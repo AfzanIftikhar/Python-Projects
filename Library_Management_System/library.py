@@ -11,21 +11,24 @@ class Book:
             raise TypeError("Title must be a string")
         if not isinstance(author,str):
             raise TypeError("Author must be a string")
-        
-        self.book_id = str(uuid.uuid4()) 
+
+        if book_id is None:
+            self.book_id = str(uuid.uuid4()) 
+        else:
+            self.book_id = book_id    
         self.title = title
         self.author = author
-        self.__is_available = True
+        self._is_available = is_available
 
 
     @property
     def is_available(self):
-        return self.__is_available
+        return self._is_available
 
     @is_available.setter
     def is_available(self,status):
         if  isinstance(status, bool):
-            self.__is_available = status
+            self._is_available = status
         else:
             raise TypeError("Availability must be True or False")
         
@@ -33,30 +36,33 @@ class Book:
 
         
     def display_details(self):
-        return f"========== Book Details ======== \n BookID : {self.book_id} \n Title : {self.title} \n Author : {self.author} \n Available : {self.__is_available}"
+        return f"========== Book Details ======== \n BookID : {self.book_id} \n Title : {self.title} \n Author : {self.author} \n Available : {self._is_available}"
 
 
 
 # --------------------------------------- Member Class --------------------------------------------------------
 class Member:
-    def __init__(self,name):
-        self.member_id = str(uuid.uuid4())
+    def __init__(self,name,member_id = None):
+        if member_id is None:
+            self.member_id = str(uuid.uuid4())
+        else:
+            self.member_id = member_id
         self.name = name
         self.borrowed_books = []
        
 
     def display_details(self):
-        return f"============== Member Details ================ \n Member ID : {self.member_id} \n Name : {self.name} \n Borrowed Books : {self.borrowed_books}"
+        return f"============== Member Details ================ \n Member_ID : {self.member_id} \n Name : {self.name} \n Borrowed Books : {self.borrowed_books}"
 
 
 class StudentMember(Member):
-    def __init__(self, name):
-        super().__init__(name)
+    def __init__(self, name,member_id=None):
+        super().__init__(name,member_id)
         self.borrowing_limit = 2
 
 class RegularMember(Member):
-    def __init__(self, name):
-        super().__init__(name)
+    def __init__(self, name,member_id=None):
+        super().__init__(name,member_id)
         self.borrowing_limit = 5
 
 # --------------------------------------- Library Class --------------------------------------------------------
@@ -95,7 +101,6 @@ class Library:
             return f"No match found for {title}"
 
     # Removing a book
-
     def remove_book(self,title):
         if not isinstance(title,str):
             raise TypeError ("Book Title must be a String")
@@ -113,6 +118,7 @@ class Library:
         if not isinstance(member, Member):
             raise TypeError("Member must be a string")
         self.members.append(member)
+
         return f"Member Added !"
     
     # Deleting a member
@@ -160,14 +166,13 @@ class Library:
     # Returning a book
     def return_book(self,member,book):
          
-
-
-        
         if not book in member.borrowed_books:
             return f"{member.name} does not borrowed the book" 
         else:
             member.borrowed_books.remove(book)
             book.is_available = True
+            library.save_books()
+            library.save_members()
             return f"{member.name} returned the book Successfully"
 
     def save_books(self):
@@ -175,7 +180,7 @@ class Library:
 
         for book in self.books:
             book_data = {
-                "Book ID ": book.book_id,
+                "book_id": book.book_id,
                 "title":book.title,
                 "author" : book.author,
                 "is_available":book.is_available
@@ -186,8 +191,64 @@ class Library:
         with open("library.json", "w") as file:
             json.dump(all_books,file,indent=4)
 
+    def load_books(self):
+        try:
+            with open("library.json", "r") as file:
+                content = json.load(file)
+                for books in content:
+                    book = Book(books["title"],books["author"],books["book_id"],books['is_available'])
+                    self.books.append(book)
+        except FileNotFoundError:
+            print("file not found!")
+
+    def save_members(self):
+        saved_members = []
+      
+
+        for members in self.members:
+            borrowed_books = []
+
+            if isinstance(members,StudentMember):
+                membership_type = "Student"
+            elif isinstance(members,RegularMember):
+                membership_type = "Regular"
+                
+            for borrow_book in members.borrowed_books:
+                borrowed_books.append(borrow_book.book_id)
 
 
+            member_data = {
+                "member_id" : members.member_id,
+                "name" : members.name,
+                "membership_type" : membership_type ,
+                "borrowed_books" : borrowed_books
+            }
+            saved_members.append(member_data)
+
+        with open("members.json", "w") as file:
+            json.dump(saved_members,file,indent=4)
+
+    def load_members(self):
+        try:
+            with open("members.json", "r") as file:
+                content = json.load(file)
+
+                for members in content:
+                    if members["membership_type"] == "Student":
+                        member = StudentMember(
+                        members["name"],
+                        members["member_id"]
+                    )
+
+                    elif members["membership_type"] == "Regular":
+                        member = RegularMember(
+                        members["name"],
+                        members["member_id"]
+                    )
+
+                    self.members.append(member)
+        except FileNotFoundError:
+            print("File not found !")
 
 # ----------------- Menu interface ---------------------
 
@@ -205,6 +266,8 @@ def display():
     print("=============================================================================================")
 
 library = Library()
+library.load_books()
+library.load_members()
 
 while True:
 
@@ -228,7 +291,7 @@ while True:
 
         try:
             print(library.remove_book(title))
-            
+            library.save_books()
         except TypeError as error:
             print(error)
 
@@ -241,7 +304,7 @@ while True:
 
     elif inp == "4":
         try:
-            print(library.display_books())
+            library.display_books()
             
         except TypeError as error:
             print(error)
@@ -252,16 +315,22 @@ while True:
             try:
                 member = library.search_member(member_name)
                 book = library.search_book(book_title)     
-                print(library.borrow_book(member, book))
+                result = library.borrow_book(member, book)
+                print(result)
+                print(member.borrowed_books)
+                library.save_books()
+                library.save_members()
                 
             except TypeError as error:
                 print(error)
     
     elif inp == "6":
-            member = input("Enter Member Name : ")
+            member_name = input("Enter Member Name : ")
             title = input("Enter Book Title : ")
             try:
-                print(library.return_book(member, title))
+                member = library.search_member(member_name) 
+                book = library.search_book(title)
+                print(library.return_book(member, book))
                 
             except TypeError as error:
                 print(error)
@@ -280,6 +349,7 @@ while True:
             try:
                
                 print(library.register_member(selected_member))
+                library.save_members()
                 
             except TypeError as error:
                 print(error)

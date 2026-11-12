@@ -1,0 +1,14 @@
+[
+    {
+        "member_id": "c2b694f9-5c9d-4daf-96d6-927fd532b268",
+        "name": "afzan",
+        "membership_type": "Student",
+        "borrowed_books": []
+    },
+    {
+        "member_id": "a67508e0-2a2b-448b-9d46-efbd8e1d6cdd",
+        "name": "zaid",
+        "membership_type": "Regular",
+        "borrowed_books": []
+    }
+]
