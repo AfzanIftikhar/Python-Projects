@@ -17,8 +17,45 @@ class Bank():
 
     except Exception as err:
         print(f"An exception occured as {Exception}")        
-    def create_account(self):
-        pass
+
+    @classmethod
+    def __update(cls):
+        with open(cls.database,"w") as file:
+            file.write(json.dumps(Bank.data))
+
+    @classmethod
+    def __accountGenerate(cls):
+        alpha = random.choices(string.ascii_letters, k=3)
+        num = random.choices(string.digits,k=3)
+        special = random.choices("@!#$%^&*",k=1)
+        id = alpha + num + special
+        random.shuffle(id)
+        return "".join(id)
+
+    def createaccount(self):
+        info = {
+            "name" : input("Enter your name : "),
+            "age" :int(input("Enter your age : ")),
+            "email" : input("Enter your Email : "),
+            "accountNo.": Bank.__accountGenerate(),
+            "pin" :input("Enter 4 digit pin : "),
+            "balance" : 0
+
+        }
+
+        if info['age'] < 18 or len(str(info['pin'])) != 4:
+            print("Sorry your account cannot be created")
+        else:
+            print("----------------------------------------------")
+            print("Account Created Successfully ! ")    
+            for i in info:
+                print(f"{i} : {info[i]}")
+
+            print("----------------------------------------------")    
+            print("please note down your account number")
+    
+            Bank.data.append(info)
+            Bank.__update()
 
 
 user = Bank()
@@ -31,7 +68,7 @@ print("Press 5 to update details ")
 print("Press 6 to delete account ")
 
 print("====================================================")
-check = input("Please enter your number : ")
+check = int(input("Please enter your number : "))
 
-if check == 1 :
-    user.create_account()
+if check == 1:
+    user.createaccount()
